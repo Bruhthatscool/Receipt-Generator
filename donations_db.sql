@@ -43,7 +43,7 @@ CREATE TABLE `donor_details` (
   `Donor_ID` int(11) NOT NULL,
   `Name` varchar(100) NOT NULL,
   `Mobile_no` varchar(15) NOT NULL,
-  `Mail` varchar(100) NOT NULL,
+  `Mail` varchar(100) DEFAULT NULL,
   `Address` varchar(255) DEFAULT NULL,
   `Location` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
