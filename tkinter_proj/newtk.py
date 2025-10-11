@@ -218,6 +218,9 @@ class DonationEntryPage(tk.Frame):
         self.ref_var = tk.StringVar()
         self.date_var = tk.StringVar(value=datetime.now().strftime("%d-%m-%Y"))
 
+        # Fetch active categories from the database
+        self.active_categories = self.get_active_categories()
+        
         form_frame = tk.Frame(main_frame, bg="#ffffff")
         form_frame.pack(padx=20, pady=10)
 
@@ -243,7 +246,7 @@ class DonationEntryPage(tk.Frame):
 
         tk.Label(form_frame, text="Payment Category", bg="#ffffff").grid(row=2, column=1, sticky="w", pady=5, padx=5)
         category_combobox = ttk.Combobox(form_frame, textvariable=self.category_var,
-                                         values=["Education", "Health", "Food", "Other"], width=30, font=("Arial", 10), state="readonly")
+                                         values=self.active_categories, width=30, font=("Arial", 10), state="readonly")
         category_combobox.set("Select a category")
         category_combobox.grid(row=3, column=1, pady=5, padx=5)
         
@@ -272,10 +275,25 @@ class DonationEntryPage(tk.Frame):
         tk.Button(button_frame, text="Reset", command=self.clear_fields, bg="#6c757d", fg="white", font=("Arial", 12, "bold"), padx=15, pady=5).pack(side="right", padx=10)
         tk.Button(button_frame, text="Submit", command=self.submit_donation, bg="#0d6efd", fg="white", font=("Arial", 12, "bold"), padx=15, pady=5).pack(side="right", padx=10)
 
+    def get_active_categories(self):
+        """Fetches active categories from the database."""
+        conn = connect_db()
+        categories = []
+        if conn:
+            cursor = conn.cursor()
+            try:
+                cursor.execute("SELECT category_name FROM category WHERE active = 1")
+                for row in cursor.fetchall():
+                    categories.append(row[0])
+            except mysql.connector.Error as err:
+                messagebox.showerror("Database Error", f"Error fetching categories: {err}")
+            finally:
+                conn.close()
+        return categories
+
     def clear_placeholder(self, event, entry_widget, placeholder_text):
         if entry_widget.get() == placeholder_text:
             entry_widget.delete(0, tk.END)
-            # Do not clear donor ID here, it's handled by key release
     
     def add_placeholder(self, event, entry_widget, variable, placeholder_text):
         if not variable.get():
@@ -311,7 +329,7 @@ class DonationEntryPage(tk.Frame):
         # Check for empty mandatory fields first, except for donor_id
         if not name or name == "Enter donor name" or not amount or amount == "0.00" or \
            not category or category == "Select a category" or not payment_type or payment_type == "Select a method" or \
-           not date or date == "dd-mm-yyyy":
+           not date:
             messagebox.showwarning("Input Error", "Please fill all mandatory fields.")
             return
 
