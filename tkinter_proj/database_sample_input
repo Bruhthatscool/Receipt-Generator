@@ -1,0 +1,25 @@
+CREATE TABLE category (    category_id INT PRIMARY KEY AUTO_INCREMENT,    category_name VARCHAR(50) NOT NULL UNIQUE,    active INT DEFAULT 1);
+
+INSERT INTO category (category_name, active) VALUES
+    -> ('Education', 1),
+    -> ('Health', 1),
+    -> ('Food', 1),
+    -> ('Shelter', 1),
+    -> ('Medical Supplies', 0),
+    -> ('Disaster Relief', 0),
+    -> ('General Fund', 1);
+
+CREATE TABLE donar_details (    donar_id INT PRIMARY KEY AUTO_INCREMENT,    name VARCHAR(100) NOT NULL,    phone_no VARCHAR(20),    email VARCHAR(100),    address TEXT,    location VARCHAR(50));
+
+INSERT INTO donar_details (name, phone_no, email, address, location) VALUES
+  ('Ananya Sharma', '+91 9876543210', 'ananya.s@example.com', '123, Gandhi Street, New Delhi, 110001', 'New Delhi'),
+('Rahul Kumar', '919012345678', 'rahul.k@example.com', '456, Nehru Road, Mumbai, 400001', 'Mumbai'),
+  ('Priya Singh', '918765432109', 'priya.s@example.com', '789, Indira Avenue, Chennai, 600001', 'Chennai'),
+('Athul Nair', '917654321987', 'athul.n@example.com', '101, Subhash Marg, Bangalore, 560001', 'Bangalore'),
+  ('Kiran Varma', '919988776655', 'kiran.v@example.com', '202, Main Road, Hyderabad, 500001', 'Hyderabad');
+
+CREATE TABLE receipt_table (    receipt_id INT PRIMARY KEY AUTO_INCREMENT,    donar_id INT,    amount DECIMAL(10, 2) NOT NULL,    date DATE NOT NULL,    category VARCHAR(50),    
+                            payment_type VARCHAR(50),    reference_no VARCHAR(100),    FOREIGN KEY (donar_id) REFERENCES donar_details(donar_id));
+
+INSERT INTO receipt_table (donar_id, amount, date, category, payment_type, reference_no) VALUES(1, 1500.00, '2025-09-25', 'Education', 'UPI', 'UPI001'),(2, 5000.00, '2025-09-28', 'Health', 'Card', 'TXN56789'),
+  (3, 750.00, '2025-10-01', 'Food', 'Cash', NULL),(4, 2500.00, '2025-10-05', 'Education', 'UPI', 'UPI002'),(5, 10000.00, '2025-10-10', 'General Fund', 'Cheque', 'CHQ9876');
