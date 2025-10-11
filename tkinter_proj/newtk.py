@@ -134,11 +134,16 @@ class DonorEntryPage(tk.Frame):
             text_widget.insert("1.0", placeholder_text)
 
     def save_donor(self):
+        donor_id = self.donor_id_var.get()
         name = self.name_var.get()
         phone = self.phone_var.get()
         email = self.email_var.get()
         address = self.address_entry.get("1.0", tk.END).strip()
         location = self.location_var.get()
+
+        if not donor_id or donor_id == "e.g., DN-0001":
+            messagebox.showwarning("Input Error", "Donor ID is required.")
+            return
 
         if name == "Full name" or not name:
             messagebox.showwarning("Input Error", "Donor name is required.")
@@ -149,17 +154,17 @@ class DonorEntryPage(tk.Frame):
             return
         cursor = conn.cursor()
 
-        # Check if donor already exists
-        cursor.execute("SELECT donar_id FROM donar_details WHERE name=%s", (name,))
+        # Check if donor already exists based on Donor_ID
+        cursor.execute("SELECT donar_id FROM donar_details WHERE donar_id=%s", (donor_id,))
         if cursor.fetchone():
-            messagebox.showinfo("Duplicate", "This donor already exists.")
+            messagebox.showinfo("Duplicate", "This donor ID already exists.")
             conn.close()
             return
 
         cursor.execute("""
-            INSERT INTO donar_details (name, phone_no, email, address, location)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (name, phone, email, address, location))
+            INSERT INTO donar_details (donar_id, name, phone_no, email, address, location)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (donor_id, name, phone, email, address, location))
         conn.commit()
         conn.close()
 
@@ -167,6 +172,7 @@ class DonorEntryPage(tk.Frame):
         self.clear_fields()
 
     def clear_fields(self):
+        self.donor_id_var.set("")
         self.name_var.set("")
         self.phone_var.set("")
         self.email_var.set("")
@@ -174,6 +180,7 @@ class DonorEntryPage(tk.Frame):
         self.location_var.set("")
         
         # Reset placeholders
+        self.donor_id_var.set("e.g., DN-0001")
         self.name_var.set("Full name")
         self.phone_var.set("e.g., +1 555 000 1234")
         self.email_var.set("name@example.com")
