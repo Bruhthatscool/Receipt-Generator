@@ -9,7 +9,7 @@ def connect_db():
         conn = mysql.connector.connect(
             host='localhost',
             user='root',
-            password='Ananya#1',  # change this if needed
+            password='',  # change if needed
             database='new_db'
         )
         return conn
@@ -17,43 +17,18 @@ def connect_db():
         messagebox.showerror("Database Error", f"Error connecting to database:\n{e}")
         return None
 
-# ---------------- MAIN APPLICATION ----------------
-class DonationApp(tk.Tk):
-    def __init__(self):
-        super().__init__()
-        self.title("Donation Management System")
-        self.geometry("750x600")
-        self.configure(bg="#f8f9fa")
-
-        # Initialize Frames
-        self.frames = {}
-        for F in (DonorEntryPage, DonationEntryPage, ReceiptPage, ViewDonationsPage):
-            frame = F(self)
-            self.frames[F] = frame
-            frame.grid(row=0, column=0, sticky="nsew")
-
-        self.show_frame(DonationEntryPage)
-
-    def show_frame(self, cont):
-        frame = self.frames[cont]
-        frame.tkraise()
-
 # ---------------- PAGE 1: DONOR ENTRY ----------------
 class DonorEntryPage(tk.Frame):
     def __init__(self, parent):
-        super().__init__(parent, bg="#f8f9fa", padx=30, pady=30, relief="raised", bd=2, highlightbackground="#d3d3d3", highlightthickness=1)
-        
+        super().__init__(parent, bg="#f8f9fa", padx=30, pady=30)
         self.parent = parent
 
-        # Use a main frame to center the content
         main_frame = tk.Frame(self, bg="#ffffff", padx=20, pady=20)
         main_frame.pack(expand=True, fill="both")
 
-        title = tk.Label(main_frame, text="Donor Registration", font=("Arial", 18, "bold"), bg="#ffffff", fg="#0d6efd")
-        title.pack(pady=10)
+        tk.Label(main_frame, text="Donor Registration", font=("Arial", 18, "bold"), bg="#ffffff", fg="#0d6efd").pack(pady=10)
 
         # Variables
-        self.donor_id_var = tk.StringVar()
         self.name_var = tk.StringVar()
         self.phone_var = tk.StringVar()
         self.email_var = tk.StringVar()
@@ -63,88 +38,46 @@ class DonorEntryPage(tk.Frame):
         form_frame = tk.Frame(main_frame, bg="#ffffff")
         form_frame.pack(padx=20, pady=10)
 
-        # First row: Donor ID and Name
-        tk.Label(form_frame, text="Donor ID", bg="#ffffff").grid(row=0, column=0, sticky="w", pady=5, padx=5)
-        entry1 = tk.Entry(form_frame, textvariable=self.donor_id_var, width=33, font=("Arial", 10), bd=1, relief="solid")
-        entry1.grid(row=1, column=0, pady=5, padx=5)
-        entry1.insert(0, "e.g., DN-0001")
-        entry1.bind("<FocusIn>", lambda event: self.clear_placeholder(event, entry1, "e.g., DN-0001"))
-        entry1.bind("<FocusOut>", lambda event: self.add_placeholder(event, entry1, self.donor_id_var, "e.g., DN-0001"))
+        # Name
+        tk.Label(form_frame, text="Name *", bg="#ffffff").grid(row=0, column=0, sticky="w", pady=5, padx=5)
+        self.name_entry = tk.Entry(form_frame, textvariable=self.name_var, width=33, font=("Arial", 10), bd=1, relief="solid")
+        self.name_entry.grid(row=1, column=0, pady=5, padx=5)
 
-        tk.Label(form_frame, text="Name", bg="#ffffff").grid(row=0, column=1, sticky="w", pady=5, padx=5)
-        entry2 = tk.Entry(form_frame, textvariable=self.name_var, width=33, font=("Arial", 10), bd=1, relief="solid")
-        entry2.grid(row=1, column=1, pady=5, padx=5)
-        entry2.insert(0, "Full name")
-        entry2.bind("<FocusIn>", lambda event: self.clear_placeholder(event, entry2, "Full name"))
-        entry2.bind("<FocusOut>", lambda event: self.add_placeholder(event, entry2, self.name_var, "Full name"))
-        
-        # Second row: Phone Number and Email
-        tk.Label(form_frame, text="Phone Number", bg="#ffffff").grid(row=2, column=0, sticky="w", pady=5, padx=5)
-        entry3 = tk.Entry(form_frame, textvariable=self.phone_var, width=33, font=("Arial", 10), bd=1, relief="solid")
-        entry3.grid(row=3, column=0, pady=5, padx=5)
-        entry3.insert(0, "e.g., +1 555 000 1234")
-        entry3.bind("<FocusIn>", lambda event: self.clear_placeholder(event, entry3, "e.g., +1 555 000 1234"))
-        entry3.bind("<FocusOut>", lambda event: self.add_placeholder(event, entry3, self.phone_var, "e.g., +1 555 000 1234"))
-        
-        tk.Label(form_frame, text="Email", bg="#ffffff").grid(row=2, column=1, sticky="w", pady=5, padx=5)
-        entry4 = tk.Entry(form_frame, textvariable=self.email_var, width=33, font=("Arial", 10), bd=1, relief="solid")
-        entry4.grid(row=3, column=1, pady=5, padx=5)
-        entry4.insert(0, "name@example.com")
-        entry4.bind("<FocusIn>", lambda event: self.clear_placeholder(event, entry4, "name@example.com"))
-        entry4.bind("<FocusOut>", lambda event: self.add_placeholder(event, entry4, self.email_var, "name@example.com"))
+        # Phone
+        tk.Label(form_frame, text="Phone Number *", bg="#ffffff").grid(row=0, column=1, sticky="w", pady=5, padx=5)
+        self.phone_entry = tk.Entry(form_frame, textvariable=self.phone_var, width=33, font=("Arial", 10), bd=1, relief="solid")
+        self.phone_entry.grid(row=1, column=1, pady=5, padx=5)
 
-        # Third row: Address (spanning both columns)
-        tk.Label(form_frame, text="Address", bg="#ffffff").grid(row=4, column=0, sticky="w", pady=5, padx=5)
-        self.address_entry = tk.Text(form_frame, width=68, height=3, font=("Arial", 10), bd=1, relief="solid")
-        self.address_entry.grid(row=5, column=0, columnspan=2, pady=5, padx=5)
-        self.address_entry.insert(tk.END, "Street, City, State, ZIP")
-        self.address_entry.bind("<FocusIn>", lambda event: self.clear_text_placeholder(event, self.address_entry, "Street, City, State, ZIP"))
-        self.address_entry.bind("<FocusOut>", lambda event: self.add_text_placeholder(event, self.address_entry, "Street, City, State, ZIP"))
+        # Email
+        tk.Label(form_frame, text="Email", bg="#ffffff").grid(row=2, column=0, sticky="w", pady=5, padx=5)
+        self.email_entry = tk.Entry(form_frame, textvariable=self.email_var, width=33, font=("Arial", 10), bd=1, relief="solid")
+        self.email_entry.grid(row=3, column=0, pady=5, padx=5)
 
-        # Fourth row: Location
-        tk.Label(form_frame, text="Location", bg="#ffffff").grid(row=6, column=0, sticky="w", pady=5, padx=5)
-        entry5 = tk.Entry(form_frame, textvariable=self.location_var, width=33, font=("Arial", 10), bd=1, relief="solid")
-        entry5.grid(row=7, column=0, pady=5, padx=5)
-        entry5.insert(0, "City / Region")
-        entry5.bind("<FocusIn>", lambda event: self.clear_placeholder(event, entry5, "City / Region"))
-        entry5.bind("<FocusOut>", lambda event: self.add_placeholder(event, entry5, self.location_var, "City / Region"))
+        # Address
+        tk.Label(form_frame, text="Address", bg="#ffffff").grid(row=2, column=1, sticky="w", pady=5, padx=5)
+        self.address_entry = tk.Entry(form_frame, textvariable=self.address_var, width=33, font=("Arial", 10), bd=1, relief="solid")
+        self.address_entry.grid(row=3, column=1, pady=5, padx=5)
 
+        # Location
+        tk.Label(form_frame, text="Location", bg="#ffffff").grid(row=4, column=0, sticky="w", pady=5, padx=5)
+        self.location_entry = tk.Entry(form_frame, textvariable=self.location_var, width=33, font=("Arial", 10), bd=1, relief="solid")
+        self.location_entry.grid(row=5, column=0, pady=5, padx=5)
+
+        # Buttons
         button_frame = tk.Frame(main_frame, bg="#ffffff")
         button_frame.pack(pady=20)
-        
         tk.Button(button_frame, text="Register", command=self.save_donor, bg="#0d6efd", fg="white", font=("Arial", 12, "bold"), padx=15, pady=5).pack(side="left", padx=10)
-        tk.Button(button_frame, text="Continue", command=lambda: parent.show_frame(DonationEntryPage), bg="#6c757d", fg="white", font=("Arial", 12, "bold"), padx=15, pady=5).pack(side="left", padx=10)
-
-    def clear_placeholder(self, event, entry_widget, placeholder_text):
-        if entry_widget.get() == placeholder_text:
-            entry_widget.delete(0, tk.END)
-
-    def add_placeholder(self, event, entry_widget, variable, placeholder_text):
-        if not variable.get():
-            entry_widget.insert(0, placeholder_text)
-
-    def clear_text_placeholder(self, event, text_widget, placeholder_text):
-        if text_widget.get("1.0", tk.END).strip() == placeholder_text:
-            text_widget.delete("1.0", tk.END)
-
-    def add_text_placeholder(self, event, text_widget, placeholder_text):
-        if not text_widget.get("1.0", tk.END).strip():
-            text_widget.insert("1.0", placeholder_text)
+        tk.Button(button_frame, text="Cancel", command=lambda: parent.show_frame(DonationEntryPage), bg="#6c757d", fg="white", font=("Arial", 12, "bold"), padx=15, pady=5).pack(side="left", padx=10)
 
     def save_donor(self):
-        donor_id = self.donor_id_var.get()
-        name = self.name_var.get()
-        phone = self.phone_var.get()
-        email = self.email_var.get()
-        address = self.address_entry.get("1.0", tk.END).strip()
-        location = self.location_var.get()
+        name = self.name_var.get().strip()
+        phone = self.phone_var.get().strip()
+        email = self.email_var.get().strip()
+        address = self.address_var.get().strip()
+        location = self.location_var.get().strip()
 
-        if not donor_id or donor_id == "e.g., DN-0001":
-            messagebox.showwarning("Input Error", "Donor ID is required.")
-            return
-
-        if name == "Full name" or not name:
-            messagebox.showwarning("Input Error", "Donor name is required.")
+        if not name or not phone:
+            messagebox.showwarning("Input Error", "Name and Phone Number are required.")
             return
 
         conn = connect_db()
@@ -152,235 +85,188 @@ class DonorEntryPage(tk.Frame):
             return
         cursor = conn.cursor()
 
-        # Check if donor already exists based on Donor_ID
-        cursor.execute("SELECT donar_id FROM donar_details WHERE donar_id=%s", (donor_id,))
+        cursor.execute("SELECT donar_id FROM donar_details WHERE name=%s AND phone_no=%s", (name, phone))
         if cursor.fetchone():
-            messagebox.showinfo("Duplicate", "This donor ID already exists.")
+            messagebox.showinfo("Duplicate", "This donor already exists.")
             conn.close()
             return
 
         cursor.execute("""
-            INSERT INTO donar_details (donar_id, name, phone_no, email, address, location)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """, (donor_id, name, phone, email, address, location))
+            INSERT INTO donar_details (name, phone_no, email, address, location)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (name, phone, email, address, location))
         conn.commit()
         conn.close()
 
         messagebox.showinfo("Success", "Donor details saved successfully!")
         self.clear_fields()
 
+        # Auto-return to donation page with name filled
+        self.parent.show_frame(DonationEntryPage)
+        self.parent.frames[DonationEntryPage].name_var.set(name)
+
     def clear_fields(self):
-        self.donor_id_var.set("")
         self.name_var.set("")
         self.phone_var.set("")
         self.email_var.set("")
-        self.address_entry.delete("1.0", tk.END)
+        self.address_var.set("")
         self.location_var.set("")
-        
-        # Reset placeholders
-        self.donor_id_var.set("e.g., DN-0001")
-        self.name_var.set("Full name")
-        self.phone_var.set("e.g., +1 555 000 1234")
-        self.email_var.set("name@example.com")
-        self.address_entry.insert("1.0", "Street, City, State, ZIP")
-        self.location_var.set("City / Region")
 
 # ---------------- PAGE 2: DONATION ENTRY ----------------
 class DonationEntryPage(tk.Frame):
     def __init__(self, parent):
-        super().__init__(parent, bg="#f8f9fa", padx=30, pady=30, relief="raised", bd=2, highlightbackground="#d3d3d3", highlightthickness=1)
-        
+        super().__init__(parent, bg="#f8f9fa", padx=30, pady=30)
         self.parent = parent
-        
-        # Use a main frame to center the content
+
         main_frame = tk.Frame(self, bg="#ffffff", padx=20, pady=20)
         main_frame.pack(expand=True, fill="both")
 
-        title_frame = tk.Frame(main_frame, bg="#ffffff")
-        title_frame.pack(fill="x", pady=10)
-        
-        title = tk.Label(title_frame, text="DONATION DETAILS", font=("Arial", 18, "bold"), bg="#ffffff", fg="#0d6efd")
-        title.pack(side="left", padx=5)
-
-        tk.Button(title_frame, text="New Donor Registration", command=lambda: parent.show_frame(DonorEntryPage),
-                  bg="#d3d3d3", fg="black", font=("Arial", 10)).pack(side="right", padx=5)
-        
-        tk.Button(title_frame, text="View All Donations", command=lambda: parent.show_frame(ViewDonationsPage),
-                  bg="#198754", fg="white", font=("Arial", 10)).pack(side="right")
-
+        tk.Label(main_frame, text="DONATION DETAILS", font=("Arial", 18, "bold"), bg="#ffffff", fg="#0d6efd").pack(pady=10)
 
         # Variables
         self.name_var = tk.StringVar()
-        self.donor_id_var = tk.StringVar()  # New variable for Donor ID
         self.amount_var = tk.StringVar()
         self.category_var = tk.StringVar()
         self.payment_var = tk.StringVar()
         self.ref_var = tk.StringVar()
         self.date_var = tk.StringVar(value=datetime.now().strftime("%d-%m-%Y"))
 
-        # Fetch active categories from the database
         self.active_categories = self.get_active_categories()
-        
+
         form_frame = tk.Frame(main_frame, bg="#ffffff")
         form_frame.pack(padx=20, pady=10)
 
-        # First row: Donor Name and Donor ID
-        tk.Label(form_frame, text="Donor Name", bg="#ffffff").grid(row=0, column=0, sticky="w", pady=5, padx=5)
-        name_entry = tk.Entry(form_frame, textvariable=self.name_var, width=33, font=("Arial", 10), bd=1, relief="solid")
-        name_entry.grid(row=1, column=0, pady=5, padx=5)
-        name_entry.insert(0, "Enter donor name")
-        name_entry.bind("<FocusIn>", lambda event: self.clear_placeholder(event, name_entry, "Enter donor name"))
-        name_entry.bind("<KeyRelease>", self.check_donor_autocomplete) 
+        # Donor Name Autocomplete
+        tk.Label(form_frame, text="Donor Name *", bg="#ffffff").grid(row=0, column=0, sticky="w", pady=5, padx=5)
+        self.name_combobox = ttk.Combobox(form_frame, textvariable=self.name_var, width=33, font=("Arial", 10))
+        self.name_combobox.grid(row=1, column=0, pady=5, padx=5)
+        self.name_combobox.set("Enter donor name")
+        self.name_combobox.bind("<KeyRelease>", self.fetch_donor_matches)
 
-        tk.Label(form_frame, text="Donor ID", bg="#ffffff").grid(row=0, column=1, sticky="w", pady=5, padx=5)
-        donor_id_entry = tk.Entry(form_frame, textvariable=self.donor_id_var, width=33, font=("Arial", 10), bd=1, relief="solid", state='readonly')
-        donor_id_entry.grid(row=1, column=1, pady=5, padx=5)
+        # Amount
+        tk.Label(form_frame, text="Amount *", bg="#ffffff").grid(row=2, column=0, sticky="w", pady=5, padx=5)
+        self.amount_entry = tk.Entry(form_frame, textvariable=self.amount_var, width=33, font=("Arial", 10))
+        self.amount_entry.grid(row=3, column=0, pady=5, padx=5)
+        self.amount_entry.insert(0, "0.00")
 
-        # Second row: Amount and Payment Category
-        tk.Label(form_frame, text="Amount", bg="#ffffff").grid(row=2, column=0, sticky="w", pady=5, padx=5)
-        amount_entry = tk.Entry(form_frame, textvariable=self.amount_var, width=33, font=("Arial", 10), bd=1, relief="solid")
-        amount_entry.grid(row=3, column=0, pady=5, padx=5)
-        amount_entry.insert(0, "0.00")
-        amount_entry.bind("<FocusIn>", lambda event: self.clear_placeholder(event, amount_entry, "0.00"))
-        amount_entry.bind("<FocusOut>", lambda event: self.add_placeholder(event, amount_entry, self.amount_var, "0.00"))
+        # Category
+        tk.Label(form_frame, text="Payment Category *", bg="#ffffff").grid(row=2, column=1, sticky="w", pady=5, padx=5)
+        self.category_combobox = ttk.Combobox(form_frame, textvariable=self.category_var, values=self.active_categories, width=30, font=("Arial", 10), state="readonly")
+        self.category_combobox.set("Select a category")
+        self.category_combobox.grid(row=3, column=1, pady=5, padx=5)
 
-        tk.Label(form_frame, text="Payment Category", bg="#ffffff").grid(row=2, column=1, sticky="w", pady=5, padx=5)
-        category_combobox = ttk.Combobox(form_frame, textvariable=self.category_var,
-                                         values=self.active_categories, width=30, font=("Arial", 10), state="readonly")
-        category_combobox.set("Select a category")
-        category_combobox.grid(row=3, column=1, pady=5, padx=5)
-        
-        # Third row: Payment Method and Date
-        tk.Label(form_frame, text="Payment Method", bg="#ffffff").grid(row=4, column=0, sticky="w", pady=5, padx=5)
-        payment_combobox = ttk.Combobox(form_frame, textvariable=self.payment_var,
-                                        values=["Cash", "UPI", "Card", "Cheque"], width=30, font=("Arial", 10), state="readonly")
-        payment_combobox.set("Select a method")
-        payment_combobox.grid(row=5, column=0, pady=5, padx=5)
+        # Payment Method
+        tk.Label(form_frame, text="Payment Method *", bg="#ffffff").grid(row=4, column=0, sticky="w", pady=5, padx=5)
+        self.payment_combobox = ttk.Combobox(form_frame, textvariable=self.payment_var, values=["Cash", "UPI", "Card", "Cheque"], width=30, font=("Arial", 10), state="readonly")
+        self.payment_combobox.set("Select a method")
+        self.payment_combobox.grid(row=5, column=0, pady=5, padx=5)
 
-        tk.Label(form_frame, text="Date", bg="#ffffff").grid(row=4, column=1, sticky="w", pady=5, padx=5)
-        date_entry = tk.Entry(form_frame, textvariable=self.date_var, width=33, font=("Arial", 10), bd=1, relief="solid")
-        date_entry.grid(row=5, column=1, pady=5, padx=5)
+        # Date
+        tk.Label(form_frame, text="Date *", bg="#ffffff").grid(row=4, column=1, sticky="w", pady=5, padx=5)
+        self.date_entry = tk.Entry(form_frame, textvariable=self.date_var, width=33, font=("Arial", 10))
+        self.date_entry.grid(row=5, column=1, pady=5, padx=5)
 
-        # Fourth row: Ref Number
+        # Reference
         tk.Label(form_frame, text="Ref Number", bg="#ffffff").grid(row=6, column=0, sticky="w", pady=5, padx=5)
-        ref_entry = tk.Entry(form_frame, textvariable=self.ref_var, width=33, font=("Arial", 10), bd=1, relief="solid")
-        ref_entry.grid(row=7, column=0, pady=5, padx=5)
-        ref_entry.insert(0, "Reference number")
-        ref_entry.bind("<FocusIn>", lambda event: self.clear_placeholder(event, ref_entry, "Reference number"))
-        ref_entry.bind("<FocusOut>", lambda event: self.add_placeholder(event, ref_entry, self.ref_var, "Reference number"))
+        self.ref_entry = tk.Entry(form_frame, textvariable=self.ref_var, width=33, font=("Arial", 10))
+        self.ref_entry.grid(row=7, column=0, pady=5, padx=5)
 
+        # Buttons
         button_frame = tk.Frame(main_frame, bg="#ffffff")
         button_frame.pack(fill="x", pady=20)
-        
-        tk.Button(button_frame, text="Reset", command=self.clear_fields, bg="#6c757d", fg="white", font=("Arial", 12, "bold"), padx=15, pady=5).pack(side="right", padx=10)
-        tk.Button(button_frame, text="Submit", command=self.submit_donation, bg="#0d6efd", fg="white", font=("Arial", 12, "bold"), padx=15, pady=5).pack(side="right", padx=10)
+        tk.Button(button_frame, text="Reset", command=self.clear_fields, bg="#6c757d", fg="white", font=("Arial", 12, "bold")).pack(side="right", padx=10)
+        tk.Button(button_frame, text="Submit", command=self.submit_donation, bg="#0d6efd", fg="white", font=("Arial", 12, "bold")).pack(side="right", padx=10)
+        tk.Button(button_frame, text="New Donor Registration", command=lambda: parent.show_frame(DonorEntryPage), bg="#d3d3d3").pack(side="left")
+        tk.Button(button_frame, text="View All Donations", command=lambda: parent.show_frame(ViewDonationsPage), bg="#198754", fg="white").pack(side="left", padx=5)
 
     def get_active_categories(self):
-        """Fetches active categories from the database."""
         conn = connect_db()
         categories = []
         if conn:
             cursor = conn.cursor()
-            try:
-                cursor.execute("SELECT category_name FROM category WHERE active = 1")
-                for row in cursor.fetchall():
-                    categories.append(row[0])
-            except mysql.connector.Error as err:
-                messagebox.showerror("Database Error", f"Error fetching categories: {err}")
-            finally:
-                conn.close()
+            cursor.execute("SELECT category_name FROM category WHERE active = 1")
+            categories = [row[0] for row in cursor.fetchall()]
+            conn.close()
         return categories
 
-    def clear_placeholder(self, event, entry_widget, placeholder_text):
-        if entry_widget.get() == placeholder_text:
-            entry_widget.delete(0, tk.END)
-    
-    def add_placeholder(self, event, entry_widget, variable, placeholder_text):
-        if not variable.get():
-            entry_widget.insert(0, placeholder_text)
-
-    def check_donor_autocomplete(self, event):
+    def fetch_donor_matches(self, event):
         name = self.name_var.get().strip()
-        if not name or name == "Enter donor name":
-            self.donor_id_var.set("")
+        if len(name) < 3:
             return
-
         conn = connect_db()
         if conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT donar_id FROM donar_details WHERE name LIKE %s", (f"%{name}%",))
-            result = cursor.fetchone()
+            cursor.execute("SELECT name FROM donar_details WHERE name LIKE %s", (f"%{name}%",))
+            results = [row[0] for row in cursor.fetchall()]
             conn.close()
-
-            if result:
-                self.donor_id_var.set(result[0])
+            if results:
+                self.name_combobox['values'] = results
             else:
-                self.donor_id_var.set("Not Found")
-    
+                response = messagebox.askyesno("Donor Not Found", "No matching donor found. Register new donor?")
+                if response:
+                    self.parent.show_frame(DonorEntryPage)
+
     def submit_donation(self):
         name = self.name_var.get().strip()
-        donor_id = self.donor_id_var.get()
         amount = self.amount_var.get().strip()
         category = self.category_var.get()
         payment_type = self.payment_var.get()
         reference_no = self.ref_var.get().strip()
         date = self.date_var.get().strip()
 
-        # Check for empty mandatory fields first, except for donor_id
-        if not name or name == "Enter donor name" or not amount or amount == "0.00" or \
-           not category or category == "Select a category" or not payment_type or payment_type == "Select a method" or \
-           not date:
+        if not name or not amount or not category or not payment_type or not date:
             messagebox.showwarning("Input Error", "Please fill all mandatory fields.")
             return
 
-        # Check if donor was found based on the name entered
-        if donor_id == "Not Found" or not donor_id:
-            response = messagebox.askyesno("Donor Not Found", "Donor not found. Do you want to register a new donor?")
-            if response:
-                self.parent.show_frame(DonorEntryPage)
+        # Reference required only if not cash
+        if payment_type != "Cash" and not reference_no:
+            messagebox.showwarning("Input Error", "Reference number is required for non-cash payments.")
             return
 
         conn = connect_db()
         if conn is None:
             return
         cursor = conn.cursor()
-        
-        # Convert date format for database
+
+        # Get donor ID
+        cursor.execute("SELECT donar_id FROM donar_details WHERE name=%s", (name,))
+        result = cursor.fetchone()
+        if not result:
+            messagebox.showerror("Donor Error", "Donor not found. Please register first.")
+            conn.close()
+            return
+        donor_id = result[0]
+
         try:
             date_obj = datetime.strptime(date, "%d-%m-%Y").strftime("%Y-%m-%d")
         except ValueError:
-            messagebox.showerror("Date Error", "Please enter date in dd-mm-yyyy format.")
+            messagebox.showerror("Date Error", "Enter date in dd-mm-yyyy format.")
             return
 
-        # Insert donation record
         cursor.execute("""
             INSERT INTO receipt_table (donar_id, amount, date, category, payment_type, reference_no)
             VALUES (%s, %s, %s, %s, %s, %s)
-        """, (donor_id, amount, date_obj, category, payment_type, reference_no if reference_no and reference_no != "Reference number" else None))
+        """, (donor_id, amount, date_obj, category, payment_type, reference_no if reference_no else None))
         conn.commit()
-
         receipt_id = cursor.lastrowid
         conn.close()
 
-        self.parent.frames[ReceiptPage].set_receipt_data(
-            receipt_id, name, amount, category, payment_type, reference_no, date
-        )
+        self.parent.frames[ReceiptPage].set_receipt_data(receipt_id, name, amount, category, payment_type, reference_no, date)
         self.parent.show_frame(ReceiptPage)
 
     def clear_fields(self):
         self.name_var.set("Enter donor name")
-        self.donor_id_var.set("")
         self.amount_var.set("0.00")
         self.category_var.set("Select a category")
         self.payment_var.set("Select a method")
-        self.ref_var.set("Reference number")
+        self.ref_var.set("")
         self.date_var.set(datetime.now().strftime("%d-%m-%Y"))
-
 
 # ---------------- PAGE 3: RECEIPT PAGE ----------------
 class ReceiptPage(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent, bg="#fff")
+        self.parent = parent
 
         self.title = tk.Label(self, text="Donation Receipt", font=("Arial", 18, "bold"), bg="#fff")
         self.title.pack(pady=15)
@@ -390,16 +276,14 @@ class ReceiptPage(tk.Frame):
 
         self.button_frame = tk.Frame(self, bg="#fff")
         self.button_frame.pack(pady=10)
-        
+
         tk.Button(self.button_frame, text="Back to Home", command=lambda: parent.show_frame(DonationEntryPage),
                   bg="#0d6efd", fg="white", font=("Arial", 12, "bold")).pack(side="left", padx=10)
-        
-        # Add a back button to the ViewDonationsPage
+
         self.back_button = tk.Button(self.button_frame, text="Back to Donations", command=lambda: parent.show_frame(ViewDonationsPage),
                                      bg="#6c757d", fg="white", font=("Arial", 12, "bold"))
         self.back_button.pack(side="left", padx=10)
-        self.back_button.pack_forget() # Initially hide this button
-
+        self.back_button.pack_forget()
 
     def set_receipt_data(self, rid, name, amount, category, payment, ref, date):
         self.text_box.delete(1.0, tk.END)
@@ -412,7 +296,7 @@ Donor Name      : {name}
 Category        : {category}
 Amount          : ₹{amount}
 Payment Type    : {payment}
-Reference No    : {ref if ref and ref != 'Reference number' else 'N/A'}
+Reference No    : {ref if ref else 'N/A'}
 Date            : {date}
 ----------------------------------------------
 Thank you for your contribution!
@@ -430,9 +314,8 @@ Thank you for your contribution!
 class ViewDonationsPage(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent, bg="#f8f9fa")
-
         self.parent = parent
-        
+
         tk.Label(self, text="View Donations", font=("Arial", 18, "bold"), bg="#f8f9fa").pack(pady=15)
 
         date_frame = tk.Frame(self, bg="#f8f9fa")
@@ -445,9 +328,7 @@ class ViewDonationsPage(tk.Frame):
         tk.Entry(date_frame, textvariable=self.start_date, width=15).grid(row=0, column=1)
         tk.Label(date_frame, text="End Date (YYYY-MM-DD):", bg="#f8f9fa").grid(row=0, column=2, padx=5)
         tk.Entry(date_frame, textvariable=self.end_date, width=15).grid(row=0, column=3)
-
-        tk.Button(date_frame, text="Search", command=self.search_records,
-                  bg="#198754", fg="white", font=("Arial", 10, "bold")).grid(row=0, column=4, padx=10)
+        tk.Button(date_frame, text="Search", command=self.search_records, bg="#198754", fg="white").grid(row=0, column=4, padx=10)
 
         columns = ("Receipt ID", "Donor", "Amount", "Date", "Category", "Payment Type")
         self.tree = ttk.Treeview(self, columns=columns, show='headings', height=15)
@@ -456,18 +337,13 @@ class ViewDonationsPage(tk.Frame):
             self.tree.column(col, width=120)
         self.tree.pack(padx=10, pady=10)
 
-        # Button to view a specific receipt
-        tk.Button(self, text="View Receipt", command=self.view_selected_receipt,
-                  bg="#0d6efd", fg="white", font=("Arial", 12, "bold")).pack(pady=5)
-        
-        tk.Button(self, text="Back to Home", command=lambda: parent.show_frame(DonationEntryPage),
-                  bg="#6c757d", fg="white", font=("Arial", 10, "bold")).pack(pady=5)
+        tk.Button(self, text="View Receipt", command=self.view_selected_receipt, bg="#0d6efd", fg="white").pack(pady=5)
+        tk.Button(self, text="Back to Home", command=lambda: parent.show_frame(DonationEntryPage), bg="#6c757d", fg="white").pack(pady=5)
 
     def search_records(self):
         sdate = self.start_date.get()
         edate = self.end_date.get()
-
-        if not (sdate and edate):
+        if not sdate or not edate:
             messagebox.showwarning("Input Error", "Please enter both start and end dates.")
             return
 
@@ -486,7 +362,6 @@ class ViewDonationsPage(tk.Frame):
 
         for row in self.tree.get_children():
             self.tree.delete(row)
-
         for rec in records:
             self.tree.insert("", "end", values=rec)
 
@@ -497,20 +372,13 @@ class ViewDonationsPage(tk.Frame):
             return
 
         item_data = self.tree.item(selected_item, 'values')
-        
         receipt_id = item_data[0]
+
         conn = connect_db()
         if conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT
-                    r.receipt_id,
-                    d.name,
-                    r.amount,
-                    r.category,
-                    r.payment_type,
-                    r.reference_no,
-                    r.date
+                SELECT r.receipt_id, d.name, r.amount, r.category, r.payment_type, r.reference_no, r.date
                 FROM receipt_table r
                 JOIN donar_details d ON r.donar_id = d.donar_id
                 WHERE r.receipt_id = %s
@@ -519,17 +387,32 @@ class ViewDonationsPage(tk.Frame):
             conn.close()
 
             if record:
-                date_obj = record[6]
-                formatted_date = date_obj.strftime("%d-%m-%Y")
-
-                self.parent.frames[ReceiptPage].set_receipt_data(
-                    record[0], record[1], record[2], record[3], record[4], record[5], formatted_date
-                )
+                formatted_date = record[6].strftime("%d-%m-%Y") if isinstance(record[6], datetime) else record[6]
+                self.parent.frames[ReceiptPage].set_receipt_data(record[0], record[1], record[2], record[3], record[4], record[5], formatted_date)
                 self.parent.frames[ReceiptPage].show_back_button(True)
                 self.parent.show_frame(ReceiptPage)
             else:
                 messagebox.showerror("Error", "Could not retrieve receipt details.")
 
+# ---------------- MAIN APPLICATION ----------------
+class DonationApp(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Donation Management System")
+        self.geometry("750x600")
+        self.configure(bg="#f8f9fa")
+
+        self.frames = {}
+        for F in (DonorEntryPage, DonationEntryPage, ReceiptPage, ViewDonationsPage):
+            frame = F(self)
+            self.frames[F] = frame
+            frame.grid(row=0, column=0, sticky="nsew")
+
+        self.show_frame(DonationEntryPage)
+
+    def show_frame(self, cont):
+        frame = self.frames[cont]
+        frame.tkraise()
 
 # ---------------- RUN APP ----------------
 if __name__ == "__main__":
