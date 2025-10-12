@@ -9,7 +9,7 @@ def connect_db():
         conn = mysql.connector.connect(
             host='localhost',
             user='root',
-            password='',  # change if needed
+            password='ATHUL@0407',  # change if needed
             database='new_db'
         )
         return conn
@@ -531,6 +531,7 @@ class ManageDonorsPage(tk.Frame):
             self.address_var.set(values[4])
             self.location_var.set(values[5])
 
+    
     def add_or_update_donor(self):
         name = self.name_var.get().strip()
         phone = self.phone_var.get().strip()
@@ -547,13 +548,18 @@ class ManageDonorsPage(tk.Frame):
             return
         cursor = conn.cursor()
 
-        if self.selected_donor_id:  # Update existing donor
+        # Check if a donor with this name and phone number already exists
+        cursor.execute("SELECT donar_id FROM donar_details WHERE name=%s AND phone_no=%s", (name, phone))
+        existing_donor = cursor.fetchone()
+
+        if existing_donor:  # Donor already exists, so update
+            donor_id_to_update = existing_donor[0]
             cursor.execute("""
-                UPDATE donar_details SET name=%s, phone_no=%s, email=%s, address=%s, location=%s
+                UPDATE donar_details SET email=%s, address=%s, location=%s
                 WHERE donar_id=%s
-            """, (name, phone, email, address, location, self.selected_donor_id))
+            """, (email, address, location, donor_id_to_update))
             messagebox.showinfo("Success", "Donor updated successfully!")
-        else:  # Add new donor
+        else:  # No existing donor, so insert a new one
             cursor.execute("""
                 INSERT INTO donar_details (name, phone_no, email, address, location)
                 VALUES (%s, %s, %s, %s, %s)
@@ -564,7 +570,6 @@ class ManageDonorsPage(tk.Frame):
         conn.close()
         self.clear_form()
         self.load_donors()
-
     def delete_donor(self):
         selected = self.tree.selection()
         if not selected:
