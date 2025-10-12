@@ -132,6 +132,7 @@ class DonationEntryPage(tk.Frame):
         self.date_var = tk.StringVar(value=datetime.now().strftime("%d-%m-%Y"))
 
         self.active_categories = self.get_active_categories()
+        vcmd = self.register(self.only_positive_numbers)
 
         form_frame = tk.Frame(main_frame, bg="#ffffff")
         form_frame.pack(padx=20, pady=10)
@@ -145,9 +146,12 @@ class DonationEntryPage(tk.Frame):
 
         # Amount
         tk.Label(form_frame, text="Amount *", bg="#ffffff").grid(row=2, column=0, sticky="w", pady=5, padx=5)
-        self.amount_entry = tk.Entry(form_frame, textvariable=self.amount_var, width=33, font=("Arial", 10))
-        self.amount_entry.grid(row=3, column=0, pady=5, padx=5)
-        self.amount_entry.insert(0, "0.00")
+        amount_entry = tk.Entry(form_frame, textvariable=self.amount_var, width=33, font=("Arial", 10), bd=1, relief="solid",
+                        validate="key", validatecommand=(vcmd, "%P"))
+        amount_entry.grid(row=3, column=0, pady=5, padx=5)
+        amount_entry.insert(0, "0.00")
+        amount_entry.bind("<FocusIn>", lambda event: self.clear_placeholder(event, amount_entry, "0.00"))
+        amount_entry.bind("<FocusOut>", lambda event: self.add_placeholder(event, amount_entry, self.amount_var, "0.00"))
 
         # Category
         tk.Label(form_frame, text="Payment Category *", bg="#ffffff").grid(row=2, column=1, sticky="w", pady=5, padx=5)
@@ -176,8 +180,20 @@ class DonationEntryPage(tk.Frame):
         button_frame.pack(fill="x", pady=20)
         tk.Button(button_frame, text="Reset", command=self.clear_fields, bg="#6c757d", fg="white", font=("Arial", 12, "bold")).pack(side="right", padx=10)
         tk.Button(button_frame, text="Submit", command=self.submit_donation, bg="#0d6efd", fg="white", font=("Arial", 12, "bold")).pack(side="right", padx=10)
-        tk.Button(button_frame, text="New Donor Registration", command=lambda: parent.show_frame(DonorEntryPage), bg="#d3d3d3").pack(side="left")
+        tk.Button(button_frame, text="Manage Donors", command=lambda: parent.show_frame(ManageDonorsPage), bg="#d3d3d3").pack(side="left")
         tk.Button(button_frame, text="View All Donations", command=lambda: parent.show_frame(ViewDonationsPage), bg="#198754", fg="white").pack(side="left", padx=5)
+
+    def only_positive_numbers(self, P):
+        """
+        Allow only positive numbers (integers or decimals) and empty string.
+        """
+        if P == "":
+            return True
+        try:
+            value = float(P)
+            return value >= 0  # only positive numbers
+        except ValueError:
+            return False
 
     def get_active_categories(self):
         conn = connect_db()
@@ -337,8 +353,21 @@ class ViewDonationsPage(tk.Frame):
             self.tree.column(col, width=120)
         self.tree.pack(padx=10, pady=10)
 
-        tk.Button(self, text="View Receipt", command=self.view_selected_receipt, bg="#0d6efd", fg="white").pack(pady=5)
-        tk.Button(self, text="Back to Home", command=lambda: parent.show_frame(DonationEntryPage), bg="#6c757d", fg="white").pack(pady=5)
+        # Button container frame
+        button_frame = tk.Frame(self, bg="#f8f9fa")
+        button_frame.pack(pady=10)
+
+        tk.Button(button_frame, text="Manage Donors", 
+                command=lambda: parent.show_frame(ManageDonorsPage), 
+                bg="#d3d3d3").pack(side="left", padx=5)
+
+        tk.Button(button_frame, text="View Receipt", 
+                command=self.view_selected_receipt, 
+                bg="#0d6efd", fg="white").pack(side="left", padx=5)
+
+        tk.Button(button_frame, text="Back to Home", 
+                command=lambda: parent.show_frame(DonationEntryPage), 
+                bg="#6c757d", fg="white").pack(side="left", padx=5)
 
     def search_records(self):
         sdate = self.start_date.get()
@@ -403,7 +432,7 @@ class DonationApp(tk.Tk):
         self.configure(bg="#f8f9fa")
 
         self.frames = {}
-        for F in (DonorEntryPage, DonationEntryPage, ReceiptPage, ViewDonationsPage):
+        for F in (DonorEntryPage, DonationEntryPage, ReceiptPage, ViewDonationsPage, ManageDonorsPage):
             frame = F(self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -413,6 +442,172 @@ class DonationApp(tk.Tk):
     def show_frame(self, cont):
         frame = self.frames[cont]
         frame.tkraise()
+
+class ManageDonorsPage(tk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent, bg="#f8f9fa")
+        self.parent = parent
+
+        tk.Label(self, text="Manage Donors", font=("Arial", 18, "bold"), bg="#f8f9fa").pack(pady=15)
+
+        # ----------- Form for Add/Update -----------
+        form_frame = tk.Frame(self, bg="#ffffff", padx=20, pady=20, relief="raised", bd=2)
+        form_frame.pack(padx=10, pady=10, fill="x")
+
+        self.name_var = tk.StringVar()
+        self.phone_var = tk.StringVar()
+        self.email_var = tk.StringVar()
+        self.address_var = tk.StringVar()
+        self.location_var = tk.StringVar()
+        self.selected_donor_id = None  # Keep track of donor being edited
+
+        tk.Label(form_frame, text="Name *", bg="#ffffff").grid(row=0, column=0, sticky="w", pady=5)
+        tk.Entry(form_frame, textvariable=self.name_var, width=30).grid(row=1, column=0, pady=5)
+
+        tk.Label(form_frame, text="Phone *", bg="#ffffff").grid(row=0, column=1, sticky="w", pady=5)
+        tk.Entry(form_frame, textvariable=self.phone_var, width=30).grid(row=1, column=1, pady=5)
+
+        tk.Label(form_frame, text="Email", bg="#ffffff").grid(row=2, column=0, sticky="w", pady=5)
+        tk.Entry(form_frame, textvariable=self.email_var, width=30).grid(row=3, column=0, pady=5)
+
+        tk.Label(form_frame, text="Address", bg="#ffffff").grid(row=2, column=1, sticky="w", pady=5)
+        tk.Entry(form_frame, textvariable=self.address_var, width=30).grid(row=3, column=1, pady=5)
+
+        tk.Label(form_frame, text="Location", bg="#ffffff").grid(row=4, column=0, sticky="w", pady=5)
+        tk.Entry(form_frame, textvariable=self.location_var, width=30).grid(row=5, column=0, pady=5)
+
+        button_frame = tk.Frame(form_frame, bg="#ffffff")
+        button_frame.grid(row=6, column=0, columnspan=2, pady=10)
+
+        tk.Button(button_frame, text="Add / Update", command=self.add_or_update_donor, bg="#0d6efd", fg="white").pack(side="left", padx=5)
+        tk.Button(button_frame, text="Clear", command=self.clear_form, bg="#6c757d", fg="white").pack(side="left", padx=5)
+        tk.Button(button_frame, text="Back to Donations", command=lambda: parent.show_frame(DonationEntryPage), bg="#198754", fg="white").pack(side="right", padx=5)
+
+        # ----------- Donor Table -----------
+        table_frame = tk.Frame(self, bg="#f8f9fa")
+        table_frame.pack(padx=10, pady=10, fill="both", expand=True)
+
+        columns = ("Donor ID", "Name", "Phone", "Email", "Address", "Location")
+        self.tree = ttk.Treeview(table_frame, columns=columns, show="headings")
+        for col in columns:
+            self.tree.heading(col, text=col)
+            self.tree.column(col, width=120)
+        self.tree.pack(side="left", fill="both", expand=True)
+
+        scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=self.tree.yview)
+        scrollbar.pack(side="right", fill="y")
+        self.tree.configure(yscrollcommand=scrollbar.set)
+
+        self.tree.bind("<<TreeviewSelect>>", self.on_row_selected)
+
+        # Delete button
+        tk.Button(self, text="Delete Selected Donor", command=self.delete_donor, bg="#dc3545", fg="white").pack(pady=5)
+
+        self.load_donors()
+
+    # ----------- DB Operations -----------
+
+    def load_donors(self):
+        conn = connect_db()
+        if conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT donar_id, name, phone_no, email, address, location FROM donar_details")
+            records = cursor.fetchall()
+            conn.close()
+
+            for row in self.tree.get_children():
+                self.tree.delete(row)
+            for rec in records:
+                self.tree.insert("", "end", values=rec)
+
+    def on_row_selected(self, event):
+        selected = self.tree.selection()
+        if selected:
+            values = self.tree.item(selected[0], 'values')
+            self.selected_donor_id = values[0]
+            self.name_var.set(values[1])
+            self.phone_var.set(values[2])
+            self.email_var.set(values[3])
+            self.address_var.set(values[4])
+            self.location_var.set(values[5])
+
+    def add_or_update_donor(self):
+        name = self.name_var.get().strip()
+        phone = self.phone_var.get().strip()
+        email = self.email_var.get().strip()
+        address = self.address_var.get().strip()
+        location = self.location_var.get().strip()
+
+        if not name or not phone:
+            messagebox.showwarning("Input Error", "Name and Phone are required.")
+            return
+
+        conn = connect_db()
+        if conn is None:
+            return
+        cursor = conn.cursor()
+
+        if self.selected_donor_id:  # Update existing donor
+            cursor.execute("""
+                UPDATE donar_details SET name=%s, phone_no=%s, email=%s, address=%s, location=%s
+                WHERE donar_id=%s
+            """, (name, phone, email, address, location, self.selected_donor_id))
+            messagebox.showinfo("Success", "Donor updated successfully!")
+        else:  # Add new donor
+            cursor.execute("""
+                INSERT INTO donar_details (name, phone_no, email, address, location)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (name, phone, email, address, location))
+            messagebox.showinfo("Success", "Donor added successfully!")
+
+        conn.commit()
+        conn.close()
+        self.clear_form()
+        self.load_donors()
+
+    def delete_donor(self):
+        selected = self.tree.selection()
+        if not selected:
+            messagebox.showwarning("No Selection", "Select a donor to delete.")
+            return
+        donor_id = self.tree.item(selected[0], 'values')[0]
+
+        # Check if donor has existing donations
+        conn = connect_db()
+        if conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM receipt_table WHERE donar_id=%s", (donor_id,))
+            count = cursor.fetchone()[0]
+            if count > 0:
+                messagebox.showwarning("Cannot Delete", "This donor has existing donations and cannot be deleted.")
+                conn.close()
+                return
+
+            response = messagebox.askyesno("Confirm Delete", "Are you sure you want to delete this donor?")
+            if not response:
+                conn.close()
+                return
+
+            try:
+                cursor.execute("DELETE FROM donar_details WHERE donar_id=%s", (donor_id,))
+                conn.commit()
+                messagebox.showinfo("Deleted", "Donor deleted successfully!")
+            except mysql.connector.Error as e:
+                messagebox.showerror("Error", f"Cannot delete donor: {e}")
+            finally:
+                conn.close()
+
+        self.clear_form()
+        self.load_donors()
+
+
+    def clear_form(self):
+        self.selected_donor_id = None
+        self.name_var.set("")
+        self.phone_var.set("")
+        self.email_var.set("")
+        self.address_var.set("")
+        self.location_var.set("")
 
 # ---------------- RUN APP ----------------
 if __name__ == "__main__":
